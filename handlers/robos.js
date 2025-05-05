@@ -78,8 +78,8 @@ export default async function handleRobos(interaction, client) {
     const tipo = exito ? "exito" : "fallo";
 
     const modal = new ModalBuilder()
-    .setCustomId(`modal_${categoria}_${index}_${resultado}`)
-    .setTitle(resultado === "exito" ? "✅ Robo Exitoso" : "❌ Robo Fallido");
+  .setCustomId(`modal_oficial__${tipo}`) // dobles guiones bajos para que no rompa el split
+  .setTitle(tipo === "exito" ? "✅ Secuestro Exitoso" : "❌ Secuestro Fallido");
   
   const input = new TextInputBuilder()
     .setCustomId("participantes")
