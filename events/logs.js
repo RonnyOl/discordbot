@@ -10,6 +10,24 @@ client.on('messageCreate', async (message) => {
     if (!match) {
         return; // Ignorar mensajes de "retirado"    
     }
+
+    if (match[5].includes("Pistola") && match[3].includes("retirado")) {
+        try {
+            await message.react('🔫'); 
+            await message.react('👁‍🗨'); 
+        } catch (err) {
+            console.error("No se pudo reaccionar al mensaje:", err);
+        }
+    }else if (match[5].includes("Pistola") && match[3].includes("guardado")) {
+        try {
+            await message.react('🔫'); 
+            await message.react('✅'); 
+        } catch (err) {
+            console.error("No se pudo reaccionar al mensaje:", err);
+        }
+    }
+
+
     if (match[5].includes("Grado")) {
         const usuarioID = match[1];
         const nombre = match[2];

@@ -2,7 +2,7 @@ import Item from "../models/Item.js";
 
 export default async function handleInventario(client, channelInventoryId) {
   client.on('messageCreate', async (message) => {
-    if (message.channel.id !== channelInventoryId) return;
+    if (message.channel.id !== channelInventoryId || message.channel.id !== "1358265394015637614") return;
 
     if (message.content.startsWith('!inventario')) {
       try {

@@ -14,6 +14,10 @@ const usuarioSchema = new mongoose.Schema({
   robosFallidosPorSemana: { type: Number, default: 0 },
   robosExitososPorSemana: { type: Number, default: 0 },
   RobosHechos: { type: Number, default: 0 },
+  armaAsignada: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: 'Arma'
+},
   robos: [{
     robo: {type: String, required: true},
     resultado: {type: String, required: true}, // "exito" o "fracaso"

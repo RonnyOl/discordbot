@@ -1,4 +1,25 @@
+
+import Armas from "../models/Armas.js";
+import Usuario from "../models/Usuario.js";
 import { obtenerUsuario } from "../utils/blackjackUtils.js";
+async function obtenerUsuarioBanda(user) {
+  
+ let usuario = await Usuario.findOne({
+  apodoBanda: new RegExp(`^${user}$`, 'i')
+}).populate('armaAsignada');
+
+  
+  if (!usuario) {
+  
+    usuario = new Usuario({
+      userId: user.id,
+      apodo: user.username,
+      balance: 1000,
+    });
+    await usuario.save();
+  }
+  return usuario;
+}
 
 const permitidos = [
   '291347070692884490',
@@ -19,7 +40,7 @@ export default function perfilComandos(client, channelRobosId, channelRobosRegis
       if (message.mentions.users.size > 0) {
         const mencion = message.mentions.users.first();
         userId = mencion.id;
-        user = await obtenerUsuario({ id: userId });
+        user = (await obtenerUsuario({ id: userId }));
 
         if (!user) {
           return message.reply(`❌ No se encontró el perfil de ${mencion.username}.`);
@@ -45,6 +66,7 @@ export default function perfilComandos(client, channelRobosId, channelRobosRegis
           { name: "🔴 Robos fallidos", value: `**${user.robosFallidos}** ❌`, inline: true },
           {name: "💼 Apodo de banda", value: `**${user.apodoBanda || "N/A"}**`, inline: true },
           {name: "Robos realizados", value: `**${user.RobosHechos}**`, inline: true },
+          { name: "🔫 Arma asignada", value: user.armaAsignada ? `**${user.armaAsignada.nombre}** (Serial: **${user.armaAsignada.serial}**)` : "Ninguna", inline: true },
         ],
         footer: {
           text: "💼 Información del perfil"
@@ -98,5 +120,37 @@ export default function perfilComandos(client, channelRobosId, channelRobosRegis
       // Si no encaja con ningún formato
       return message.reply("❌ Uso incorrecto. Ejemplos:\n- `!setApodo Beretta`\n- `!setApodo Beretta @usuario`");
     }
+
+    if (message.content.startsWith("!setArma")) {
+  const args = message.content.split(" ");
+
+  if (args.length < 3) {
+    return message.reply("❌ Uso correcto: `!setArma ApodoBanda SERIAL1234`");
+  }
+
+  const apodo = args[1];
+  const serial = args[2];
+  // Buscar usuario por apodoBanda
+  const user = await obtenerUsuarioBanda(apodo);
+  
+  if (!user) {
+    return message.reply("❌ No se encontró un usuario con ese apodo.");
+  }
+
+  // Buscar arma por serial
+  const arma = await Armas.findOne({ serial });
+
+  if (!arma) {
+    return message.reply("❌ No se encontró un arma con ese serial.");
+  }
+
+  // Asignar el arma al usuario
+   user.armaAsignada = arma;
+   console.log(user.armaAsignada);
+   await user.save();
+
+  return message.channel.send(`✅ El arma **${arma.nombre}** con serial **${serial}** fue asignada a **${apodo}**`);
+}
+
   });
 }

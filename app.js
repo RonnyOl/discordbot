@@ -18,6 +18,7 @@ import handleRobos from "./handlers/robos.js";
 import handleBlackjack from "./handlers/blackjack.js";
 import perfilComandos from "./comandos/perfil.js";
 import casinoComandos from "./comandos/casino.js";
+import handleBunker from "./events/bunker.js";
 
 // Cargar variables de entorno
 dotenv.config();
@@ -28,6 +29,7 @@ dotenv.config();
 const channelLogsID = "1326743374623019046";
 const channelInventoryId = "1358333794993705080";
 const channelWeaponId = "1358265394015637614";
+const channelRegistroVentasId = "1371354216496631899";
 const channelMoneyId = "1358272748132237312";
 const channelRobosId = "1358309590751510578";
 const channelRobosRegistrosId = "1358308861328756947";
@@ -40,6 +42,7 @@ await conectarDB();
 onReady(client);
 handleInventario(client, channelInventoryId);
 handleArmas(client, channelWeaponId);
+handleBunker(client, channelRegistroVentasId);
 handleLogs(client, channelLogsID);
 handleDinero(client, channelLogsID, channelMoneyId);
 robosComandos(client, channelRobosId, channelRobosRegistrosId);
@@ -176,6 +179,20 @@ client.on("messageCreate", async (message) => {
       };
     
       message.channel.send({ embeds: [embed] });
+    }
+
+    if (message.content.toLowerCase() === "vamos bot, haz lo tuyo") {
+      message.channel.send({
+        files: ["https://i.imgur.com/255CZF6.png"]  // Cambiá por la URL de tu imagen
+      });
+    }
+
+    if (message.content.toLowerCase() === "holaaa") {
+      message.channel.send("queridos streetbloods");
+    }
+
+    if (message.content.toLowerCase() === "si te gano en rol") {
+      message.channel.send("También en ticket. 😈");
     }
 
     if (message.content.toLowerCase() === "si no te gano en rol") {

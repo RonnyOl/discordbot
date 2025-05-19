@@ -50,7 +50,7 @@ const partidasBlackjack = new Map();
 
 // Obtener o crear el usuario en la base de datos
 async function obtenerUsuario(user) {
-  let usuario = await Usuario.findOne({ userId: user.id });
+  let usuario = await Usuario.findOne({ userId: user.id }).populate("armaAsignada");
   console.log("usuario", usuario)
   if (!usuario) {
     console.log("paso acá")
