@@ -3,14 +3,14 @@ import Armas from "../models/Armas.js";
 import Usuario from "../models/Usuario.js";
 import { obtenerUsuario } from "../utils/blackjackUtils.js";
 async function obtenerUsuarioBanda(user) {
-  
- let usuario = await Usuario.findOne({
-  apodoBanda: new RegExp(`^${user}$`, 'i')
-}).populate('armaAsignada');
 
-  
+  let usuario = await Usuario.findOne({
+    apodoBanda: new RegExp(`^${user}$`, 'i')
+  }).populate('armaAsignada');
+
+
   if (!usuario) {
-  
+
     usuario = new Usuario({
       userId: user.id,
       apodo: user.username,
@@ -55,7 +55,7 @@ export default function perfilComandos(client, channelRobosId, channelRobosRegis
 
       const embed = {
         color: 0x2f3136,
-        title: `📄 Perfil de ${user.apodo || message.author.username}`,
+        title: `📄 Perfil de ${user.apodoBanda || message.author.username}`,
         thumbnail: {
           url: (message.mentions.users.first() || message.author).displayAvatarURL({ dynamic: true, size: 1024 })
         },
@@ -64,9 +64,10 @@ export default function perfilComandos(client, channelRobosId, channelRobosRegis
           { name: "💰 Dinero", value: `**${user.balance.toLocaleString()}** monedas`, inline: true },
           { name: "🟢 Robos exitosos", value: `**${user.robosExitosos}** ✅`, inline: true },
           { name: "🔴 Robos fallidos", value: `**${user.robosFallidos}** ❌`, inline: true },
-          {name: "💼 Apodo de banda", value: `**${user.apodoBanda || "N/A"}**`, inline: true },
-          {name: "Robos realizados", value: `**${user.RobosHechos}**`, inline: true },
-          { name: "🔫 Arma asignada", value: user.armaAsignada ? `**${user.armaAsignada.nombre}** (Serial: **${user.armaAsignada.serial}**)` : "Ninguna", inline: true },
+          { name: "💼 Apodo de banda", value: `**${user.apodoBanda || "N/A"}**`, inline: true },
+          { name: "Robos realizados", value: `**${user.RobosHechos}**`, inline: true },
+          { name: "🎯 Puntos", value: `**${user.puntos}**`, inline: true },
+          { name: "Farmeos de bunkers ☠", value: `**${user.farmeosBunker}**`, inline: true },
         ],
         footer: {
           text: "💼 Información del perfil"
@@ -122,35 +123,35 @@ export default function perfilComandos(client, channelRobosId, channelRobosRegis
     }
 
     if (message.content.startsWith("!setArma")) {
-  const args = message.content.split(" ");
+      const args = message.content.split(" ");
 
-  if (args.length < 3) {
-    return message.reply("❌ Uso correcto: `!setArma ApodoBanda SERIAL1234`");
-  }
+      if (args.length < 3) {
+        return message.reply("❌ Uso correcto: `!setArma ApodoBanda SERIAL1234`");
+      }
 
-  const apodo = args[1];
-  const serial = args[2];
-  // Buscar usuario por apodoBanda
-  const user = await obtenerUsuarioBanda(apodo);
-  
-  if (!user) {
-    return message.reply("❌ No se encontró un usuario con ese apodo.");
-  }
+      const apodo = args[1];
+      const serial = args[2];
+      // Buscar usuario por apodoBanda
+      const user = await obtenerUsuarioBanda(apodo);
 
-  // Buscar arma por serial
-  const arma = await Armas.findOne({ serial });
+      if (!user) {
+        return message.reply("❌ No se encontró un usuario con ese apodo.");
+      }
 
-  if (!arma) {
-    return message.reply("❌ No se encontró un arma con ese serial.");
-  }
+      // Buscar arma por serial
+      const arma = await Armas.findOne({ serial });
 
-  // Asignar el arma al usuario
-   user.armaAsignada = arma;
-   console.log(user.armaAsignada);
-   await user.save();
+      if (!arma) {
+        return message.reply("❌ No se encontró un arma con ese serial.");
+      }
 
-  return message.channel.send(`✅ El arma **${arma.nombre}** con serial **${serial}** fue asignada a **${apodo}**`);
-}
+      // Asignar el arma al usuario
+      user.armaAsignada = arma;
+      console.log(user.armaAsignada);
+      await user.save();
+
+      return message.channel.send(`✅ El arma **${arma.nombre}** con serial **${serial}** fue asignada a **${apodo}**`);
+    }
 
   });
 }

@@ -1,18 +1,62 @@
 import Item from "../models/Item.js";
 import Armas from "../models/Armas.js";
 import ArmasVenta from "../models/ArmasVenta.js";
+import Usuario from "../models/Usuario.js";
 
 export default function handleArmas(client, channelWeaponId) {
   client.on("messageCreate", async (message) => {
     if (
       message.channel.id !== channelWeaponId &&
-      message.channel.id !== "1371352922448990209"
+      message.channel.id !== "1371352922448990209" && message.channel.id !== "1372100038767153183" // Canal de registro de robos
     )
       return;
 
-      if (message.author.bot) return;
+    if (message.author.bot) return;
 
     const [command, ...args] = message.content.trim().split(" ");
+
+    if (command === "!armasAsignadas") {
+      try {
+        const usuarios = await Usuario.find({ armaAsignada: { $ne: null } })
+          .find({ armaAsignada: { $ne: null } })
+          .populate("armaAsignada");
+
+        if (usuarios.length === 0) {
+          return message.channel.send("🔍 No hay usuarios con armas asignadas.");
+        }
+
+        let respuesta = "**🔫 Armas Asignadas a Usuarios**\n\n";
+        for (const usuario of usuarios) {
+          const { apodoBanda, armaAsignada } = usuario;
+
+          if (!armaAsignada) continue;
+
+          respuesta += `• 🧠 Banda: **${apodoBanda || "Sin apodo"}**\n`;
+          respuesta += `  ↳ 🔫 Arma: **${armaAsignada.nombre}**\n`;
+          respuesta += `  ↳ 🔢 Serial: \`${armaAsignada.serial}\`\n\n`;
+        }
+
+        return message.channel.send(respuesta);
+      } catch (error) {
+        console.error("Error al obtener armas asignadas:", error);
+        return message.channel.send("❌ Error al obtener las armas asignadas.");
+      }
+    }
+
+function dividirMensaje(mensaje, maxLength = 2000) {
+  const partes = [];
+  while (mensaje.length > 0) {
+    let parte = mensaje.slice(0, maxLength);
+    const lastNewLine = parte.lastIndexOf('\n');
+    if (lastNewLine > 0) {
+      parte = mensaje.slice(0, lastNewLine + 1);
+    }
+    partes.push(parte);
+    mensaje = mensaje.slice(parte.length);
+  }
+  return partes;
+}
+
 
     // === !armas ===
     if (command === "!armas") {
@@ -45,22 +89,60 @@ export default function handleArmas(client, channelWeaponId) {
     }
 
     // === !serial list ===
+    // === !serial list ===
     if (command === "!serial" && args[0] === "list") {
-      const armas = await Armas.find({});
-      let seriales = "**📦 Seriales de Armas en el Depósito**\n**📦 Lista de Armas:**\n\n";
+  const armas = await Armas.find({});
 
-      let armaAnterior = "";
-      for (const arma of armas) {
-        if (arma.nombre !== armaAnterior) {
-          seriales += `\n🔫 **${arma.nombre}**:\n`;
-          armaAnterior = arma.nombre;
-        }
-        seriales += `> 🔢 \`${arma.serial}\` | 📌 ${arma.isLost ? "🔴 Perdida" : "🟢 Disponible"}\n`;
-      }
+  // Agrupamos las armas por nombre normalizado
+  const grupos = {};
+  for (const arma of armas) {
+    const nombreNormalizado = arma.nombre.trim().toUpperCase();
+    if (!grupos[nombreNormalizado]) {
+      grupos[nombreNormalizado] = [];
+    }
+    grupos[nombreNormalizado].push(arma);
+  }
 
-      await message.channel.send(seriales);
+  let bloques = [];
+  let encabezado = "**📦 Seriales de Armas en el Depósito**\n**📦 Lista de Armas:**\n\n";
+  let bloqueActual = encabezado;
+  let totalArmas = 0;
+  let primerBloque = true;
+
+  for (const nombre in grupos) {
+    let textoGrupo = `\n🔫 **${nombre}**:\n`;
+    let count = 0;
+
+    for (const arma of grupos[nombre]) {
+      count++;
+      totalArmas++;
+      textoGrupo += `> ${count} | \`${arma.serial}\` | 📌 ${arma.isLost ? "🔴 Perdida" : "🟢 Disponible"}\n`;
     }
 
+    if ((bloqueActual + textoGrupo).length > 2000) {
+      bloques.push(bloqueActual);
+      // El siguiente bloque ya no lleva encabezado
+      bloqueActual = "";
+      primerBloque = false;
+    }
+
+    bloqueActual += textoGrupo;
+  }
+
+  // Agregamos el último bloque
+  if (bloqueActual.length > 0) {
+    bloques.push(bloqueActual);
+  }
+
+  // Enviamos los bloques
+  for (let i = 0; i < bloques.length; i++) {
+    let mensaje = bloques[i];
+    if (i === bloques.length - 1) {
+      mensaje += `\n**Total: ${totalArmas} armas**`;
+    }
+    await message.channel.send(mensaje);
+  }
+}
     // === !serial add <nombre> <serial1,serial2,...> ===
     if (command === "!serial" && args[0] === "add") {
       const nombreArma = args.slice(1, -1).join(" ");
@@ -117,13 +199,14 @@ export default function handleArmas(client, channelWeaponId) {
       );
     }
 
-     if (command === "!bk" && args[0] === "list" && (args[1] === "vendidas" || args[1] === "disponibles")) {
-      
+    if (command === "!bk" && args[0] === "list" && (args[1] === "vendidas" || args[1] === "disponibles")) {
+
       const armas = await ArmasVenta.find({ isSold: args[1] === "vendidas" ? true : false }).sort({ nombre: 1 });
       let seriales = "**📦 Armas en el bunker**\n**📦 Lista de Armas:**\n\n";
       let armaAnterior = "";
-      let armasVendidas= 0;
-      let armasDisponibles= 0;
+      let armasVendidas = 0;
+      let armasDisponibles = 0;
+      let cont = 0;
       for (const arma of armas) {
         if (arma.nombre !== armaAnterior) {
           seriales += `\n🔫 **${arma.nombre}**:\n`;
@@ -131,25 +214,27 @@ export default function handleArmas(client, channelWeaponId) {
         }
         if (arma.isSold) {
           armasVendidas++;
-        }else{
+        } else {
           armasDisponibles++;
         }
-        seriales += `> 🔢 \`${arma.serial}\` | 📌 ${arma.isSold ? "🔴 Vendida" : "🟢 Disponible"}\n`;
+        cont++;
+        seriales += `> ${cont} | \`${arma.serial}\` | 📌 ${arma.isSold ? "🔴 Vendida" : "🟢 Disponible"}\n`;
       }
-      if (args[1] === "vendidas"){
+      if (args[1] === "vendidas") {
         seriales += `\n > **Armas Vendidas: ${armasVendidas}**\n `;
-      }else{
+      } else {
         seriales += `\n > **Armas Disponibles: ${armasDisponibles}**\n `;
       }
       return message.channel.send(seriales);
     }
     // === !bk list ===
     if (command === "!bk" && args[0] === "list") {
-     
+
       const armas = await ArmasVenta.find({}).sort({ nombre: 1 });
       let seriales = "**📦 Armas en el bunker**\n**📦 Lista de Armas:**\n\n";
-      let ArmasVendidas= 0;
-      let ArmasDisponibles= 0;
+      let ArmasVendidas = 0;
+      let cont = 0;
+      let ArmasDisponibles = 0;
       let armaAnterior = "";
       for (const arma of armas) {
         if (arma.nombre !== armaAnterior) {
@@ -158,10 +243,11 @@ export default function handleArmas(client, channelWeaponId) {
         }
         if (arma.isSold) {
           ArmasVendidas++;
-        }else{
+        } else {
           ArmasDisponibles++;
         }
-        seriales += `> 🔢 \`${arma.serial}\` | 📌 ${arma.isSold ? "🔴 Vendida" : "🟢 Disponible"}\n`;
+        cont++;
+        seriales += `> ${cont} | \`${arma.serial}\` | 📌 ${arma.isSold ? "🔴 Vendida" : "🟢 Disponible"}\n`;
       }
       seriales += `\n > **Armas Vendidas: ${ArmasVendidas}**\n > **Armas Disponibles: ${ArmasDisponibles}**\n Total: ${ArmasVendidas + ArmasDisponibles}`;
       return message.channel.send(seriales);

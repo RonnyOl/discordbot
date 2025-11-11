@@ -11,11 +11,11 @@ import Robo from "../models/Robo.js";
 import { actualizarResumenRobos } from "../utils/robosUtils.js";
 
 const filtroCategoria = {
-  express: ["Tiendas y Peluquerías", "Joyería", "Banco de Paleto", "Ammunation", "Jet privado", "Oficinas de Clinton", "Casa de Empeños"],
-  organizado: ["Life Invader", "Casa de Michael", "Casa de Franklin", "Bancos Chicos", "Diamond Casino", "Banco Central", "Fabrica de Lester"],
+  express: ["Tiendas y Peluquerías", "Joyería", "Banco de Paleto", "Ammunation", "Jet privado", "Oficinas de Clinton", "Life Invader", "Casa de Empeños"],
+  organizado: ["Casa de Michael", "Casa de Franklin", "Bancos Chicos", "Diamond Casino", "Banco Central", "Fabrica de Lester", "Bobcat"],
   tiroteo: ["Yate", "Aduanas", "Laboratorios Humane", "Fábrica de Pollos"]
 };
-
+const PUNTOS_BUNKER = 75;
 export default async function handleRobos(interaction, client) {
   // ✅ MENÚ PRINCIPAL
   if (interaction.customId === "robos_menu") {
@@ -32,7 +32,7 @@ export default async function handleRobos(interaction, client) {
       ephemeral: true
     }).catch(console.error);
 
-    setTimeout(() => interaction.deleteReply().catch(() => {}), 5000);
+    setTimeout(() => interaction.deleteReply().catch(() => { }), 5000);
     return true;
   }
 
@@ -48,7 +48,7 @@ export default async function handleRobos(interaction, client) {
       ephemeral: true
     }).catch(console.error);
 
-    setTimeout(() => interaction.deleteReply().catch(() => {}), 5000);
+    setTimeout(() => interaction.deleteReply().catch(() => { }), 5000);
     return true;
   }
 
@@ -65,7 +65,7 @@ export default async function handleRobos(interaction, client) {
       ephemeral: true
     }).catch(console.error);
 
-    setTimeout(() => interaction.deleteReply().catch(() => {}), 4000);
+    setTimeout(() => interaction.deleteReply().catch(() => { }), 4000);
     return true;
   }
 
@@ -78,21 +78,21 @@ export default async function handleRobos(interaction, client) {
     const tipo = exito ? "exito" : "fallo";
 
     const modal = new ModalBuilder()
-  .setCustomId(`modal_oficial__${tipo}`) // dobles guiones bajos para que no rompa el split
-  .setTitle(tipo === "exito" ? "✅ Secuestro Exitoso" : "❌ Secuestro Fallido");
-  
-  const input = new TextInputBuilder()
-    .setCustomId("participantes")
-    .setLabel("¿Quiénes participaron?")
-    .setPlaceholder("Inclúyete si participaste. Ej: Beretta, Pac")
-    .setStyle(TextInputStyle.Paragraph)
-    .setRequired(false);
-  
-  const row = new ActionRowBuilder().addComponents(input);
-  modal.addComponents(row);
-  
-  await interaction.showModal(modal);
-  
+      .setCustomId(`modal_oficial__${tipo}`) // dobles guiones bajos para que no rompa el split
+      .setTitle(tipo === "exito" ? "✅ Secuestro Exitoso" : "❌ Secuestro Fallido");
+
+    const input = new TextInputBuilder()
+      .setCustomId("participantes")
+      .setLabel("¿Quiénes participaron?")
+      .setPlaceholder("Inclúyete si participaste. Ej: Beretta, Pac")
+      .setStyle(TextInputStyle.Paragraph)
+      .setRequired(false);
+
+    const row = new ActionRowBuilder().addComponents(input);
+    modal.addComponents(row);
+
+    await interaction.showModal(modal);
+
     return true;
   }
 
@@ -113,7 +113,7 @@ export default async function handleRobos(interaction, client) {
       }
       currentRow.addComponents(
         new ButtonBuilder()
-          .setCustomId(`robo_${categoria}_${i}`)
+          .setCustomId(`robo_${categoria}_${encodeURIComponent(robo.nombre)}`)
           .setLabel(robo.nombre)
           .setStyle(ButtonStyle.Success)
       );
@@ -129,18 +129,19 @@ export default async function handleRobos(interaction, client) {
       ephemeral: true
     }).catch(console.error);
 
-    setTimeout(() => interaction.deleteReply().catch(() => {}), 5000);
+    setTimeout(() => interaction.deleteReply().catch(() => { }), 5000);
     return true;
   }
 
   // ✅ SELECCIÓN DE LUGAR
   if (prefix === "robo" && index && !resultado) {
-    const nombreLugar = filtroCategoria[categoria]?.[index];
+    console.log("index", index, "categoria", categoria, "filtro", filtroCategoria[categoria], "lugar", filtroCategoria[categoria]?.[index]);
+    const nombreLugar = decodeURIComponent(index);
     if (!nombreLugar) return;
 
     const row = new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId(`robo_${categoria}_${index}_exito`).setLabel("✅ Éxito").setStyle(ButtonStyle.Success),
-      new ButtonBuilder().setCustomId(`robo_${categoria}_${index}_fallo`).setLabel("❌ Fallo").setStyle(ButtonStyle.Danger)
+      new ButtonBuilder().setCustomId(`robo_${categoria}_${nombreLugar}_exito`).setLabel("✅ Éxito").setStyle(ButtonStyle.Success),
+      new ButtonBuilder().setCustomId(`robo_${categoria}_${nombreLugar}_fallo`).setLabel("❌ Fallo").setStyle(ButtonStyle.Danger)
     );
 
     await interaction.reply({
@@ -149,28 +150,28 @@ export default async function handleRobos(interaction, client) {
       ephemeral: true
     }).catch(console.error);
 
-    setTimeout(() => interaction.deleteReply().catch(() => {}), 4000);
+    setTimeout(() => interaction.deleteReply().catch(() => { }), 4000);
     return true;
   }
 
   // ✅ BOTÓN DE RESULTADO DE LUGAR → ABRE MODAL
   if (prefix === "robo" && resultado) {
     const modal = new ModalBuilder()
-    .setCustomId(`modal_${categoria}_${index}_${resultado}`)
-    .setTitle(resultado === "exito" ? "✅ Robo Exitoso" : "❌ Robo Fallido");
-  
-  const input = new TextInputBuilder()
-    .setCustomId("participantes")
-    .setLabel("¿Quiénes participaron?")
-    .setPlaceholder("Inclúyete si participaste. Ej: Beretta, Pac")
-    .setStyle(TextInputStyle.Paragraph)
-    .setRequired(false);
-  
-  const row = new ActionRowBuilder().addComponents(input);
-  modal.addComponents(row);
-  
-  await interaction.showModal(modal);
-  
+      .setCustomId(`modal_${categoria}_${index}_${resultado}`)
+      .setTitle(resultado === "exito" ? "✅ Robo Exitoso" : "❌ Robo Fallido");
+
+    const input = new TextInputBuilder()
+      .setCustomId("participantes")
+      .setLabel("¿Quiénes participaron?")
+      .setPlaceholder("Inclúyete si participaste. Ej: Beretta, Pac")
+      .setStyle(TextInputStyle.Paragraph)
+      .setRequired(false);
+
+    const row = new ActionRowBuilder().addComponents(input);
+    modal.addComponents(row);
+
+    await interaction.showModal(modal);
+
     return true;
   }
 
@@ -178,17 +179,17 @@ export default async function handleRobos(interaction, client) {
   if (interaction.isModalSubmit() && interaction.customId.startsWith("modal_")) {
     const [_, categoria, index, resultado] = interaction.customId.split("_");
     const participantesTexto = interaction.fields.getTextInputValue("participantes");
-  
-    const nombreLugar = filtroCategoria[categoria]?.[index] || "Secuestro Oficial";
+
+    const nombreLugar = decodeURIComponent(index) || "Secuestro Oficial";
     let lugar = await Robo.findOne({ nombre: nombreLugar });
-  
+
     if (!lugar) {
       return interaction.reply({
         content: "❌ Lugar no registrado.",
         ephemeral: true
       }).catch(console.error);
     }
-  
+
     // ✅ Actualiza el lugar
     if (resultado === "exito") {
       if (lugar.actual < lugar.max || lugar.max === Infinity) {
@@ -204,63 +205,71 @@ export default async function handleRobos(interaction, client) {
       lugar.fallos++;
       lugar.actual++;
     }
-  
+
     await lugar.save();
-  
+
     // ✅ Procesar los apodos (si los hay)
     let apodos = participantesTexto
       .split(/[,\n]/) // coma o salto de línea
       .map(p => p.trim())
       .filter(Boolean);
-  
+
     const { default: Usuario } = await import("../models/Usuario.js");
-  
+    let sumapuntos = [];
     for (const apodo of apodos) {
       const user = await Usuario.findOne({ apodoBanda: new RegExp(`^${apodo}$`, "i") });
-      
+
       if (user) {
-        
+
         // Agregar al historial de robos
         user.robos.push({
           robo: nombreLugar,
           resultado: resultado === "exito" ? "éxito" : "fracaso",
           fecha: new Date()
         });
-      
+
         // Contadores si querés mantenerlos igual
         if (resultado === "exito") {
           user.robosExitosos++;
           user.RobosHechos++
           user.robosExitososPorSemana++
+          user.puntos = lugar.puntos + user.puntos;
         } else {
           user.robosFallidos++;
           user.RobosHechos++
           user.robosFallidosPorSemana++
-
+          user.puntos = lugar.puntos + user.puntos;
         }
-      
+        sumapuntos.push(`✅ Se sumaron **${lugar.puntos} puntos** a **${apodo}** por el robo en **${nombreLugar}**.`);
+
         await user.save();
       }
+      if (!user) {
+        sumapuntos.push(`❌ No se encontró el usuario **${apodo}**`);
+        continue;
+      }
+
     }
-  
+
     // ✅ Mensaje de resultado
     const log = resultado === "exito"
       ? `✅ Robo exitoso en **${lugar.nombre}** (${lugar.actual}/${lugar.max === Infinity ? "∞" : lugar.max})`
       : `❌ Robo fallido en **${lugar.nombre}** (fallos: ${lugar.fallos})`;
-  
+
     const canalRegistros = await client.channels.fetch("1358308861328756947");
-   
+
     if (canalRegistros?.isTextBased()) {
-      canalRegistros.send(`${log} Lo confirmó <@${interaction.user.id}> y fue realizado por los siguientes integrantes: ${participantesTexto}`).catch(() => {});
+      canalRegistros.send(`${log} Lo confirmó <@${interaction.user.id}> y fue realizado por los siguientes integrantes: ${participantesTexto} y se le han sumado ${lugar.puntos} puntos a cada uno`).catch(() => { });
+      canalRegistros.send(sumapuntos.join("\n")).catch(() => { });
     }
-  
+
     actualizarResumenRobos(client, "1358309590751510578");
-  
+
     await interaction.reply({
       content: `${log}${apodos.length ? `\n👥 Participantes: ${apodos.join(", ")}` : ""}`,
       ephemeral: true
     }).catch(console.error);
-  
+
     return true;
   }
 

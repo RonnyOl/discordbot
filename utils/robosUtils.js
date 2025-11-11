@@ -11,11 +11,11 @@ export async function actualizarResumenRobos(client, channelRobosId) {
     const categorias = {
       express: {
         titulo: "⚡ **Express**",
-        lugares: ["Tiendas y Peluquerías", "Joyería", "Banco de Paleto", "Ammunation", "Jet privado", "Oficinas de Clinton", "Casa de Empeños"]
+        lugares: ["Tiendas y Peluquerías", "Joyería", "Banco de Paleto", "Ammunation", "Jet privado", "Life Invader", "Oficinas de Clinton", "Casa de Empeños"]
       },
       organizado: {
         titulo: "🧠 **Robo Organizado**",
-        lugares: ["Life Invader", "Casa de Michael", "Casa de Franklin", "Bancos Chicos", "Diamond Casino", "Banco Central", "Fabrica de Lester"]
+        lugares: ["Casa de Michael", "Casa de Franklin", "Bancos Chicos", "Diamond Casino", "Banco Central", "Fabrica de Lester", "Bobcat"]
       },
       tiroteo: {
         titulo: "🔫 **Robo con tiroteo directo**",
@@ -39,8 +39,8 @@ export async function actualizarResumenRobos(client, channelRobosId) {
         const max = robo?.max === Infinity ? "∞" : robo?.max ?? "?";
         const exitos = robo?.exitos ?? 0;
         const fallos = robo?.fallos ?? 0;
-
-        const linea = `${nombreLugar.padEnd(25)} ${String(actual).padStart(2)}/${String(max).padEnd(2)} ✅ ${String(exitos).padEnd(2)} ❌ ${String(fallos).padEnd(2)}`;
+        const puntos = robo?.puntos ?? 0;
+        const linea = `${nombreLugar.padEnd(25)} ${String(actual).padStart(2)}/${String(max).padEnd(2)} | P: ${String(puntos).padEnd(2)} |  ✅ ${String(exitos).padEnd(2)} ❌ ${String(fallos).padEnd(2)} `;
         contenido += linea + "\n";
       });
 

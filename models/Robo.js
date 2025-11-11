@@ -6,6 +6,7 @@ export const roboSchema = new mongoose.Schema({
   max: { type: Number, default: Infinity },
   exitos: { type: Number, default: 0 },
   fallos: { type: Number, default: 0 },
+  puntos: { type: Number, default: 0 },
 });
 
 // Exportas **ambos**: el modelo y el esquema

@@ -1,61 +1,60 @@
+import Usuario from "../models/Usuario.js";
 import Armas from "../models/Armas.js";
 import ArmasVenta from "../models/ArmasVenta.js";
 import Info from "../models/Info.js";
 
-export default function handleBunker(client, channelRegistroVentasId) {
+const PUNTOS_BUNKER = 75;
+
+export default function handleBunker(client, channelBunkerRegistry) {
     client.on("messageCreate", async (message) => {
-        if (message.channel.id !== channelRegistroVentasId) return;
         if (message.author.bot) return;
+        if (message.channel.id !== channelBunkerRegistry) return;
 
-        const [command, ...args] = message.content.trim().split(" ");
+        // Dividir el mensaje
+        const partes = message.content.trim().split(" ");
+        const command = partes[0];
+        const args = partes.slice(1).join(" "); // Todo lo que sigue al comando como texto
 
-        if (command === "!venta" && args[0] && args[1] && args[2]) {
-            const seriales = args[0].split(",");
-            const banda = args[1].trim();
-            const total = parseInt(args[args.length - 1]);
-            console.log(`Seriales: ${seriales}, Banda: ${banda}, Total: ${total}`);
-            if (isNaN(total)) {
-                return message.reply("❌ El valor total ingresado no es un número válido.");
+        if (command === "!bunker") {
+            if (!args) {
+                return message.reply("⚠️ Debes ingresar al menos un nombre. Ejemplo: `!bunker pac,ak,chino`");
             }
 
-            let vendidos = [];
-            let noEncontrados = [];
+            // Dividir los nombres por coma
+            const nombres = args.split(",").map(n => n.trim()).filter(n => n.length > 0);
 
-            for (const serial of seriales) {
-                const serialTrimmed = serial.trim();
-                const armaVenta = await ArmasVenta.findOne({ serial: serialTrimmed });
+            if (nombres.length === 0) {
+                return message.reply("⚠️ No se detectaron nombres válidos.");
+            }
 
-                if (!armaVenta) {
-                    noEncontrados.push(serialTrimmed);
+            let resultados = [];
+
+            for (const nombre of nombres) {
+                // Buscar usuario por apodo o campo similar
+                let user = await Usuario.findOne({
+                    apodoBanda: { $regex: new RegExp(`^${nombre}$`, "i") }
+                });
+
+
+                if (!user) {
+                    resultados.push(`❌ No se encontró el usuario **${nombre}**`);
                     continue;
                 }
 
-                armaVenta.isSold = true;
-                await armaVenta.save();
-                vendidos.push(serialTrimmed);
+                user.puntos = (user.puntos || 0) + PUNTOS_BUNKER;
+                user.farmeosBunker = (user.farmeosBunker || 0) + 1;
+                await user.save();
+
+                resultados.push(`✅ Se sumaron **${PUNTOS_BUNKER} puntos** a **${nombre}**`);
             }
 
-            await Info.findOneAndUpdate({}, { $inc: { totalDineroVendido: total } });
-
-            let replyMessage = `\`\`\`\n`;
-            replyMessage += `########### VENTA REGISTRADA ###########\n\n`;
-            replyMessage += `🔫 Banda: ${banda}\n`;
-            replyMessage += `💰 Total: $${total.toLocaleString()}\n`;
-            replyMessage += `📦 Seriales vendidos (${vendidos.length}):\n`;
-            replyMessage += `- ${vendidos.join("\n- ")}\n`;
-
-            if (noEncontrados.length > 0) {
-                replyMessage += `\n❌ Seriales no encontrados (${noEncontrados.length}):\n`;
-                replyMessage += `- ${noEncontrados.join("\n- ")}\n`;
-            }
-
-            replyMessage += `\n########################################\n`;
-            replyMessage += `\`\`\``;
-
-            await message.channel.send(replyMessage);
-
-        } else {
-            message.reply("❌ No se ha proporcionado suficiente información. Usa:\n`!venta <serial1,serial2,...> <banda> <total>`");
+            // Enviar resumen
+            await message.reply(resultados.join("\n"));
         }
+
+        // 👇 Tu otro comando de venta puede seguir acá sin problema
+        // if (command === "!venta" && args[0] && args[1] && args[2]) {
+        //     ...
+        // }
     });
 }
