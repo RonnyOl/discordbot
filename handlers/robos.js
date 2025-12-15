@@ -234,11 +234,13 @@ export default async function handleRobos(interaction, client) {
           user.RobosHechos++
           user.robosExitososPorSemana++
           user.puntos = lugar.puntos + user.puntos;
+          user.puntosAct = lugar.puntos + user.puntosAct;
         } else {
           user.robosFallidos++;
           user.RobosHechos++
           user.robosFallidosPorSemana++
           user.puntos = lugar.puntos + user.puntos;
+          user.puntosAct = lugar.puntos + user.puntosAct;
         }
         sumapuntos.push(`✅ Se sumaron **${lugar.puntos} puntos** a **${apodo}** por el robo en **${nombreLugar}**.`);
 

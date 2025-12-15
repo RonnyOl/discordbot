@@ -3,7 +3,7 @@ import Armas from "../models/Armas.js";
 import ArmasVenta from "../models/ArmasVenta.js";
 import Info from "../models/Info.js";
 
-const PUNTOS_BUNKER = 75;
+const PUNTOS_BUNKER = 300;
 
 export default function handleBunker(client, channelBunkerRegistry) {
     client.on("messageCreate", async (message) => {
@@ -40,12 +40,12 @@ export default function handleBunker(client, channelBunkerRegistry) {
                     resultados.push(`❌ No se encontró el usuario **${nombre}**`);
                     continue;
                 }
-
-                user.puntos = (user.puntos || 0) + PUNTOS_BUNKER;
+                user.puntos = Math.ceil((user.puntos || 0) + (PUNTOS_BUNKER / nombres.length));
+                user.puntosAct = Math.ceil((user.puntosAct || 0) + (PUNTOS_BUNKER / nombres.length));
                 user.farmeosBunker = (user.farmeosBunker || 0) + 1;
                 await user.save();
 
-                resultados.push(`✅ Se sumaron **${PUNTOS_BUNKER} puntos** a **${nombre}**`);
+                resultados.push(`✅ Se sumaron **${PUNTOS_BUNKER / nombres.length} puntos** a **${nombre}**`);
             }
 
             // Enviar resumen

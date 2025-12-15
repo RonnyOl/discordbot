@@ -9,7 +9,7 @@ import {
 import { obtenerUsuario } from "../utils/blackjackUtils.js";
 import Usuario from "../models/Usuario.js";
 
-const COSTE_RULETA = 1000;
+const COSTE_RULETA = 800;
 function getRandomItemWithProbability(items) {
     const total = items.reduce((acc, item) => acc + item.probabilidad, 0);
     const rand = Math.random() * total;
@@ -94,11 +94,20 @@ const itemsWithImage = [
 
 export default function handleRuleta(client) {
     client.on("messageCreate", async (message) => {
-        if (message.content == "!topAct") {
+        if (message.content == "!topPuntos") {
             const usuarios = await Usuario.find().sort({ puntos: -1 }).limit(15);
             let top = "**🏆 Top 15 Jugadores:**\n";
             usuarios.forEach((usuario, index) => {
                 top += `**${index + 1}.** ${usuario.apodoBanda} - 💰 ${usuario.puntos} puntos\n`;
+            });
+            message.reply(top);
+        }
+
+        if (message.content == "!topActividad") {
+            const usuarios = await Usuario.find().sort({ puntos: -1 }).limit(15);
+            let top = "**🏆 Top 15 Jugadores con más actividad:**\n";
+            usuarios.forEach((usuario, index) => {
+                top += `**${index + 1}.** ${usuario.apodoBanda} - 💰 ${usuario.puntosAct} puntos\n`;
             });
             message.reply(top);
         }
@@ -400,7 +409,11 @@ export default function handleRuleta(client) {
             user.ultimoRuleta = new Date();
             user.puntos -= COSTE_RULETA;
             await user.save();
+            const canalRegistrosCartas = await client.channels.fetch("1434233917057273917");
 
+            if (canalRegistrosCartas?.isTextBased()) {
+                canalRegistrosCartas.send(` ${user.apodoBanda} Ha tirado de la ruleta y ha obtenido **${finalItem.name}** .`).catch(() => { });
+            }
             // Mostrar resultado
             await sent.edit({
                 embeds: [

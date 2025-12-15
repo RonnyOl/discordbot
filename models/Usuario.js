@@ -6,6 +6,7 @@ const usuarioSchema = new mongoose.Schema({
   apodoBanda: String,
   balance: { type: Number, default: 1000 },
   puntos: { type: Number, default: 0 },
+  puntosAct: { type: Number, default: 0 },
   ultimoTrabajo: { type: Date, default: null },
   ultimoRuleta: { type: Date, default: null },
   lastFish: Number,
